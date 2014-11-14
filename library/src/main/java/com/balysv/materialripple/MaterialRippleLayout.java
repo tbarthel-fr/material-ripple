@@ -31,6 +31,7 @@ import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.Property;
 import android.util.TypedValue;
 import android.view.GestureDetector;
@@ -39,6 +40,7 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewParent;
+import android.view.ViewTreeObserver;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.LinearInterpolator;
@@ -62,6 +64,7 @@ public class MaterialRippleLayout extends FrameLayout {
     private static final boolean DEFAULT_SEARCH_ADAPTER = false;
     private static final boolean DEFAULT_RIPPLE_OVERLAY = false;
     private static final boolean DEFAULT_RIPPLE_CENTER = false;
+    private static final boolean DEFAULT_RIPPLE_OUTSIDE = false;
 
     private static final int FADE_EXTRA_DELAY = 50;
     private static final long HOVER_DURATION = 2500;
@@ -81,6 +84,7 @@ public class MaterialRippleLayout extends FrameLayout {
     private Drawable rippleBackground;
     private boolean rippleInAdapter;
     private boolean rippleCenter;
+    private boolean rippleOutside;
 
     private float radius;
 
@@ -135,7 +139,23 @@ public class MaterialRippleLayout extends FrameLayout {
         ripplePersistent = a.getBoolean(R.styleable.MaterialRippleLayout_ripplePersistent, DEFAULT_PERSISTENT);
         rippleInAdapter = a.getBoolean(R.styleable.MaterialRippleLayout_rippleInAdapter, DEFAULT_SEARCH_ADAPTER);
         rippleCenter = a.getBoolean(R.styleable.MaterialRippleLayout_rippleCenter, DEFAULT_RIPPLE_CENTER);
+        rippleOutside = a.getBoolean(R.styleable.MaterialRippleLayout_rippleOutside, DEFAULT_RIPPLE_OUTSIDE);
         a.recycle();
+
+        if (rippleOutside) {
+            // wait for a parent assignment and set clip children to false in order to allow the
+            // ripple effect to be drawn outside the layout.
+            this.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+                @Override
+                public boolean onPreDraw() {
+                    MaterialRippleLayout.this.getViewTreeObserver().removeOnPreDrawListener(this);
+                    if (rippleOutside && (getParent() instanceof ViewGroup)) {
+                        ((ViewGroup) getParent()).setClipChildren(false);
+                    }
+                    return false;
+                }
+            });
+        }
 
         paint.setColor(rippleColor);
         paint.setAlpha(rippleAlpha);

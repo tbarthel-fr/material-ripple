@@ -190,7 +190,7 @@ public class MaterialRippleLayout extends FrameLayout {
                 case MotionEvent.ACTION_UP:
                     pendingClickEvent = new PerformClickEvent();
 
-                    if (prepressed) {
+                    if (prepressed && !rippleDelayClick) {
                         childView.setPressed(true);
                         postDelayed(
                             new Runnable() {

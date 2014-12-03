@@ -41,7 +41,6 @@ import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
-import android.view.animation.LinearInterpolator;
 import android.widget.AdapterView;
 import android.widget.FrameLayout;
 
@@ -287,10 +286,17 @@ public class MaterialRippleLayout extends FrameLayout {
         if (hoverAnimator != null) {
             hoverAnimator.cancel();
         }
-        final float radius = (float) (Math.sqrt(Math.pow(getWidth(), 2) + Math.pow(getHeight(), 2)) * 1.2f);
+        float radius;
+
+        if (rippleCenter) {
+            radius = Math.max(getWidth(), getHeight());
+        } else {
+            radius = (float) (Math.sqrt(Math.pow(getWidth(), 2) + Math.pow(getHeight(), 2)) * 1.2f);
+        }
+
         hoverAnimator = ObjectAnimator.ofFloat(this, radiusProperty, rippleDiameter, radius)
                 .setDuration(HOVER_DURATION);
-        hoverAnimator.setInterpolator(new LinearInterpolator());
+        hoverAnimator.setInterpolator(new DecelerateInterpolator());
         hoverAnimator.start();
     }
 
@@ -350,13 +356,18 @@ public class MaterialRippleLayout extends FrameLayout {
         final int width = getWidth();
         final int height = getHeight();
 
-        final int halfWidth = width / 2;
-        final int halfHeight = height / 2;
 
-        final float radiusX = halfWidth > currentCoords.x ? width - currentCoords.x : currentCoords.x;
-        final float radiusY = halfHeight > currentCoords.y ? height - currentCoords.y : currentCoords.y;
+        if (rippleCenter) {
+            return Math.max(width, height);
+        } else {
+            final int halfWidth = width / 2;
+            final int halfHeight = height / 2;
 
-        return (float) Math.sqrt(Math.pow(radiusX, 2) + Math.pow(radiusY, 2)) * 1.2f;
+            final float radiusX = halfWidth > currentCoords.x ? width - currentCoords.x : currentCoords.x;
+            final float radiusY = halfHeight > currentCoords.y ? height - currentCoords.y : currentCoords.y;
+
+            return (float) Math.sqrt(Math.pow(radiusX, 2) + Math.pow(radiusY, 2)) * 1.2f;
+        }
     }
 
     private boolean isInScrollingContainer() {
